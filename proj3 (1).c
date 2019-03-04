@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
 void listFiles( char *basePath, FilesList** headCurr, FilesList* new, int flag )
 {
-    char* path = malloc( sizeof( char ) * ( strlen( basePath ) + MAX_NAME + 1 ) );
+    char* path = malloc( sizeof( char ) * ( strlen( basePath ) + MAX_NAME + 2 ) );
     if( !path ){
         puts( "Brak pamieci." );
         exit( EXIT_FAILURE );
@@ -91,11 +91,11 @@ void listFiles( char *basePath, FilesList** headCurr, FilesList* new, int flag )
             if( strcmp( dp->d_name, "." ) != 0 && strcmp( dp->d_name, ".." ) != 0)
             {
                 strcpy( path, basePath );
-                if( flag ){
+                if( flag && dp->d_type != DT_DIR ){
                     // Dodawanie plikow z folderu nowego.
                     addToList( headCurr, path, dp->d_name );
                 }else{
-                    if( checkPath( path, new ) ){
+                    if( dp->d_type != DT_DIR && checkPath( path, new ) ){
                         // Dodawanie plikow z folderu bazowego.
                         addToList( headCurr, path, dp->d_name );
                     }
@@ -109,7 +109,7 @@ void listFiles( char *basePath, FilesList** headCurr, FilesList* new, int flag )
     closedir( dir );
 }
 void addToList( FilesList** head, char path[], char name[] ){
-    char* fileDir = malloc( ( strlen( path ) + strlen( name ) + 1 ) * sizeof( char ) );
+    char* fileDir = malloc( ( strlen( path ) + strlen( name ) + 2 ) * sizeof( char ) );
     if( !fileDir ){
         puts( "Brak pamieci." );
         exit( EXIT_FAILURE );
@@ -130,8 +130,8 @@ void addToList( FilesList** head, char path[], char name[] ){
         fclose( file );
     }
     // Do listy wpisujemy tylko pliki. Foldery maja wielkosc 0.
-    if( size != 0 ){
-        char* filePath = malloc( ( strlen( path ) + 1 ) * sizeof( char ) );
+    if( size > 0 ){
+        char* filePath = malloc( ( strlen( path ) + 2 ) * sizeof( char ) );
         if( !filePath ){
             puts( "Brak pamieci." );
             exit( EXIT_FAILURE );
@@ -151,6 +151,7 @@ void addToList( FilesList** head, char path[], char name[] ){
     }else{
         free( fileDir );
     }
+	fclose( file );
 }
 void findDupli( FilesList* main, FilesList* new ){
     FilesList* current = main;
@@ -225,7 +226,7 @@ int checkDir( char* pathMain, char* pathNew ){
 int checkPath( char* path, FilesList* head ){
     // Zmienna do kontrolowania czy dany folder wystepuje.
     int flag = 1;
-    char* pathExt = malloc( ( strlen( path ) + 1 ) * sizeof( char ) );
+    char* pathExt = malloc( ( strlen( path ) + 2 ) * sizeof( char ) );
     if( !pathExt ){
         puts( "Brak pamieci." );
         exit( EXIT_FAILURE );
@@ -248,7 +249,7 @@ int compareFiles( FilesList* main, FilesList* new )
     char byteMain, byteNew;
     fileMain = fopen( main->file, "rb" );
     fileNew = fopen( new->file, "rb" );
-    for( long long i=0 ; i < main->size ; ++i ) {
+    for( long long i=0 ; i < main->size ; ++i ) {;
         // Czytamy po jednym bicie po jednym elemencie.
         fread( &byteMain, 1, 1, fileMain );
         fread( &byteNew, 1, 1, fileNew );
